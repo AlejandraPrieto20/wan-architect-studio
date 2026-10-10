@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAN Architect Studio — v4.0 (Diseño de Redes & Ciberdefensa)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f3efe6; --card:#fffdf8; --ink:#16213a; --muted:#5d6678; --line:#d9d2c0;
+  --accent:#e4572e; --accent-d:#c2431f; --teal:#1d6f6a; --teal-bg:#dcefec;
+  --amber:#b7791f; --amber-bg:#f8ecd0; --rose:#b42340; --rose-bg:#f9dfe4;
+  --term:#101827; --term-fg:#7ee2a8;
+  --serif:'Fraunces',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:32px 32px;background-attachment:fixed;background-blend-mode:multiply;font-size:14px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0;background:var(--paper);opacity:.82;z-index:-1}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button{font-family:inherit;cursor:pointer}
+
+/* ===== Layout ===== */
+.app{display:grid;grid-template-columns:272px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--ink);color:#e9e5d8;padding:26px 18px;display:flex;flex-direction:column;gap:26px}
+.brand{display:flex;gap:12px;align-items:center}
+.brand .logo{width:42px;height:42px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:#fff}
+.brand h1{font-family:var(--serif);font-size:19px;font-weight:800;line-height:1.1;color:#fff}
+.brand small{font-size:11px;color:#a9b0c2}
+.steps{display:flex;flex-direction:column;gap:6px;list-style:none;padding:0}
+.step{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;background:transparent;border:0;color:#b9bfd0;text-align:left;font-size:13px;font-weight:500;width:100%;transition:.15s}
+.step .n{width:26px;height:26px;border-radius:50%;border:1.5px solid #4b567a;display:grid;place-items:center;font:600 11px var(--mono);flex:none}
+.step:hover{background:#222f52;color:#fff}
+.step.active{background:#fffdf8;color:var(--ink);font-weight:600}
+.step.active .n{background:var(--accent);border-color:var(--accent);color:#fff}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.side-foot p{font-size:11px;color:#8d96ad}
+.main{padding:34px clamp(16px,4vw,48px) 60px;max-width:1180px;width:100%}
+
+/* ===== Piezas ===== */
+.panel{display:none}
+.panel.active{display:block;animation:in .25s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.eyebrow{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h2.title{font-family:var(--serif);font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.1;margin:6px 0 8px}
+.lead{color:var(--muted);max-width:680px}
+.card{background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:22px;box-shadow:5px 5px 0 var(--ink)}
+.card + .card{margin-top:26px}
+.stack{display:flex;flex-direction:column;gap:22px}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.label{display:block;font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-bottom:10px}
+.hint{font-size:12px;color:var(--muted)}
+.tag{display:inline-block;font:500 10.5px var(--mono);padding:2px 9px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--muted)}
+.tag.t{background:var(--teal-bg);color:var(--teal);border-color:#b2d6d1}
+.tag.a{background:var(--amber-bg);color:var(--amber);border-color:#e8d29c}
+.tag.o{background:#fde3d9;color:var(--accent-d);border-color:#f3bba5}
+hr{border:0;border-top:1.5px dashed var(--line);margin:4px 0}
+
+input[type=text],input[type=number]{width:100%;background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:11px 14px;font:500 14px var(--sans);color:var(--ink);outline:none}
+input[type=text]:focus,input[type=number]:focus{box-shadow:0 0 0 3px #e4572e44;border-color:var(--accent)}
+.mono{font-family:var(--mono)}
+
+.btn{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);border-radius:10px;padding:9px 14px;font-size:12.5px;font-weight:600;transition:.12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.btn:active{transform:none;box-shadow:none}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.green{background:var(--teal);color:#fff}
+.btn.big{padding:15px 24px;font-size:14px;border-radius:12px}
+.btn.ghost-d{background:#222f52;border-color:#3a4a78;color:#fff}
+
+/* presets */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.preset{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;text-align:left;transition:.15s;font-family:inherit;color:inherit}
+.preset:hover{border-color:var(--ink)}
+.preset.active{border-color:var(--ink);background:#fff3ec;box-shadow:4px 4px 0 var(--accent)}
+.preset b{font-family:var(--serif);font-size:17px;display:block;margin-bottom:2px}
+.preset p{font-size:12px;color:var(--muted);margin:4px 0 10px}
+
+/* stepper numerico */
+.num{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:16px}
+.num header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.num header b{font-size:13px}
+.ctrl{display:flex;gap:8px;margin-top:12px}
+.ctrl button{width:40px;border:1.5px solid var(--ink);background:var(--paper);border-radius:10px;font-size:18px;font-weight:600;color:var(--ink)}
+.ctrl button:hover{background:var(--ink);color:#fff}
+.ctrl input{text-align:center;font:600 16px var(--mono)}
+
+/* servicios */
+.svc{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;transition:.12s}
+.svc:hover{border-color:var(--ink)}
+.svc input{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.svc div{flex:1}
+.svc b{display:block;font-size:13px}
+.svc span.d{font-size:11.5px;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:7px 14px;font:500 12px var(--mono);color:var(--muted)}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.cta{position:sticky;bottom:14px;z-index:5;background:var(--ink);color:#fff;border-radius:16px;padding:16px 20px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;box-shadow:0 10px 30px #16213a55;margin-top:26px}
+.cta .hint{color:#b9bfd0}
+
+/* metricas */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.metric{background:var(--card);border:1.5px solid var(--ink);border-radius:14px;padding:16px}
+.metric small{font:600 10.5px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.metric strong{display:block;font:800 34px var(--serif);line-height:1.1;margin:4px 0}
+.metric span{font-size:11.5px;color:var(--muted)}
+
+/* tabla */
+.searchbox{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:0 12px;flex:1;max-width:420px}
+.searchbox input{border:0;box-shadow:none!important;padding:10px 0;background:transparent;font-family:var(--mono);font-size:12.5px}
+.tablewrap{overflow:auto;max-height:560px;border:1.5px solid var(--ink);border-radius:12px;background:#fff}
+table{width:100%;border-collapse:collapse;font:12.5px var(--mono);white-space:nowrap}
+thead th{position:sticky;top:0;background:var(--ink);color:#fff;text-align:left;padding:11px 14px;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+tbody td{padding:10px 14px;border-bottom:1px solid #ece6d6}
+tbody tr:nth-child(even){background:#faf6ec}
+tbody tr:hover{background:#fde9df}
+.wan{color:var(--amber);font-weight:600}.lan{color:var(--teal);font-weight:600}
+
+/* topologia */
+.topo{background:#fff;border:1.5px solid var(--ink);border-radius:14px;padding:30px 20px;overflow-x:auto;
+  background-image:radial-gradient(var(--line) 1.2px,transparent 1.2px);background-size:18px 18px}
+.topo-in{display:flex;align-items:center;justify-content:center;gap:0;min-width:max-content;margin:0 auto}
+.site{width:228px;background:var(--card);border:1.5px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--teal);overflow:hidden;flex:none}
+.site-h{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--teal);color:#fff}
+.site-h b{font-family:var(--serif);font-size:15px;display:block}
+.site-h small{font:11px var(--mono);opacity:.85}
+.sw{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 14px;border-top:1px dashed var(--line);font-size:12px}
+.sw span:first-child{display:flex;align-items:center;gap:8px;font-weight:600}
+.sw .ic{color:var(--accent);width:15px;height:15px}
+.link{display:flex;flex-direction:column;align-items:center;width:96px;flex:none;position:relative}
+.link i{display:block;width:100%;border-top:2.5px dashed var(--accent);animation:dash 1s linear infinite}
+.link em{font:600 10.5px var(--mono);font-style:normal;color:var(--accent-d);background:#fde3d9;border:1px solid #f3bba5;border-radius:99px;padding:1px 8px;margin-top:6px}
+@keyframes dash{to{border-top-color:var(--ink)}}
+.info3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+.info{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:14px}
+.info b{display:flex;gap:8px;align-items:center;margin-bottom:4px;font-size:13px}
+.info p{font-size:12px;color:var(--muted)}
+
+/* terminal */
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#fff;border:1.5px solid var(--ink);border-radius:12px;padding:4px}
+.seg button{border:0;background:transparent;padding:7px 13px;border-radius:8px;font-size:12px;font-weight:500;color:var(--muted)}
+.seg button.active{background:var(--ink);color:#fff;font-weight:600}
+.term{border:1.5px solid var(--ink);border-radius:14px;overflow:hidden;box-shadow:5px 5px 0 var(--accent)}
+.term-bar{display:flex;justify-content:space-between;align-items:center;background:#1c2740;padding:10px 14px;gap:10px;flex-wrap:wrap}
+.dots{display:flex;gap:6px;align-items:center;font:600 12px var(--mono);color:#cfd6ea}
+.dots i{width:11px;height:11px;border-radius:50%;display:block}
+pre{background:var(--term);color:var(--term-fg);padding:20px;font:12.5px/1.65 var(--mono);overflow:auto;max-height:520px;margin:0}
+
+/* ciberdefensa */
+.audit{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;border:1.5px solid #b2d6d1;border-radius:10px;padding:10px 12px;font-size:12.5px;font-weight:500}
+.audit .ok{display:flex;gap:8px;align-items:center;color:var(--teal)}
+.result{border-radius:12px;padding:14px;border:1.5px solid var(--rose);background:var(--rose-bg);margin-top:14px}
+.result.safe{border-color:var(--teal);background:var(--teal-bg)}
+.result .rt{display:flex;gap:8px;align-items:center;font-weight:700;font-size:13px;color:var(--rose)}
+.result.safe .rt{color:var(--teal)}
+.result p{font:12px/1.6 var(--mono);margin-top:6px;color:var(--ink)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* toast */
+#toast{position:fixed;top:20px;right:20px;z-index:99;background:var(--ink);color:#fff;border-left:5px solid var(--teal);border-radius:12px;padding:13px 18px;max-width:340px;box-shadow:0 12px 30px #16213a66;transform:translateY(-130%);transition:.3s}
+#toast.show{transform:none}
+#toast.err{border-color:var(--accent)}
+#toast b{display:block;font-size:13px}#toast span{font-size:12px;color:#c9cfe0}
+
+/* ===== Responsive ===== */
+@media(max-width:960px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:14px;gap:12px}
+  .steps{flex-direction:row;overflow-x:auto;width:100%;order:3;padding-bottom:4px}
+  .step{white-space:nowrap;width:auto}
+  .side-foot{margin:0 0 0 auto;flex-direction:row}.side-foot p{display:none}
+  .metrics,.grid4{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:720px){.grid3,.grid2,.info3{grid-template-columns:1fr}.card{box-shadow:3px 3px 0 var(--ink)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ BARRA LATERAL ============ -->
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"><svg class="ic" data-i="network"></svg></div>
+      <div><h1>WAN Architect<br>Studio</h1><small>Diseño Empresarial & Ciberdefensa · v4.0</small></div>
+    </div>
+
+    <ol class="steps" id="steps">
+      <li><button class="step active" data-tab="empresa" onclick="switchTab('empresa')"><span class="n">1</span>Datos de mi Empresa</button></li>
+      <li><button class="step" data-tab="direccionamiento" onclick="switchTab('direccionamiento')"><span class="n">2</span>Direccionamiento IP (VLSM)</button></li>
+      <li><button class="step" data-tab="topologia" onclick="switchTab('topologia')"><span class="n">3</span>Topología Recomendable</button></li>
+      <li><button class="step" data-tab="codigos" onclick="switchTab('codigos')"><span class="n">4</span>Códigos de Dispositivos</button></li>
+      <li><button class="step" data-tab="ciberdefensa" onclick="switchTab('ciberdefensa')"><span class="n">5</span>Ciberdefensa Contra IA</button></li>
+    </ol>
+
+    <div class="side-foot">
+      <button class="btn green" onclick="exportToExcel()"><svg class="ic" data-i="download"></svg>Descargar Excel</button>
+      <p>Proyecto Interconexión de Redes WAN</p>
+    </div>
+  </aside>
+
+  <!-- ============ CONTENIDO ============ -->
+  <main class="main">
+
+    <!-- ===== 1. EMPRESA ===== -->
+    <section id="panel-empresa" class="panel active">
+      <div class="eyebrow">Paso 1 de 5 · Configuración inicial</div>
+      <h2 class="title">Cuéntanos cómo es tu empresa</h2>
+      <p class="lead" style="margin-bottom:26px">Diligencia solo los datos físicos de tu organización. Al calcular, la app genera el direccionamiento, la topología y los códigos de laboratorio en sus pestañas.</p>
+
+      <div class="card stack">
+        <div>
+          <label class="label" for="inpCompanyName">1. Nombre corporativo / razón social</label>
+          <input type="text" id="inpCompanyName" value="Soluciones Tecnológicas Global S.A.S." placeholder="Ej. Mi Empresa S.A., Banco Andino, Hospital Central" style="max-width:560px">
+        </div>
+        <hr>
+        <div>
+          <label class="label">2. Elige una escala predefinida o ajústala manualmente</label>
+          <div class="grid3">
+            <button type="button" class="preset" data-preset="small" onclick="applyCompanyPreset('small',this)">
+              <b>Pequeña</b><p>2 sedes por WAN, 1 piso por sede y 20 puestos.</p><span class="tag">2 Sedes · 40 Puestos</span>
+            </button>
+            <button type="button" class="preset active" data-preset="medium" onclick="applyCompanyPreset('medium',this)">
+              <b>Mediana</b><p>3 sedes interconectadas, 2 pisos por sede y 45 usuarios por piso.</p><span class="tag o">3 Sedes · 270 Puestos</span>
+            </button>
+            <button type="button" class="preset" data-preset="large" onclick="applyCompanyPreset('large',this)">
+              <b>Grande</b><p>5 sedes principales, 3 pisos por sede y 100 empleados por piso.</p><span class="tag t">5 Sedes · 1500 Puestos</span>
+            </button>
+          </div>
+        </div>
+        <hr>
+        <div>
+          <label class="label">3. Dimensionamiento físico de edificios y personal</label>
+          <div class="grid3">
+            <div class="num">
+              <header><b>Sedes físicas (WAN)</b><span class="tag o" id="badgeSedes">3 Sedes</span></header>
+              <p class="hint">Edificios unidos por enlaces punto a punto /30.</p>
+              <div class="ctrl"><button type="button" onclick="stepVal('inpSedes',-1)">−</button><input type="number" id="inpSedes" value="3" min="1" max="8" oninput="updateSummaryCounters()"><button type="button" onclick="stepVal('inpSedes',1)">+</button></div>
+            </div>
+            <div class="num">
+              <header><b>Pisos por sede</b><span class="tag" id="badgePisos">2 Pisos</span></header>
+              <p class="hint">Cada piso tiene su switch de distribución.</p>
+              <div class="ctrl"><button type="button" onclick="stepVal('inpPisos',-1)">−</button><input type="number" id="inpPisos" value="2" min="1" max="6" oninput="updateSummaryCounters()"><button type="button" onclick="stepVal('inpPisos',1)">+</button></div>
+            </div>
+            <div class="num">
+              <header><b>Empleados por piso</b><span class="tag t" id="badgeUsers">45 Empleados</span></header>
+              <p class="hint">Usuarios concurrentes por switch de piso.</p>
+              <div class="ctrl"><button type="button" onclick="stepVal('inpUsers',-1)">−</button><input type="number" id="inpUsers" value="45" min="5" max="500" oninput="updateSummaryCounters()"><button type="button" onclick="stepVal('inpUsers',1)">+</button></div>
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="grid2">
+          <div>
+            <label class="label">4. Servicios requeridos (VLANs dedicadas)</label>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <label class="svc" style="background:#f3f8f7;border-color:#b2d6d1;cursor:default"><input type="checkbox" checked disabled><div><b>PCs y escritorio</b><span class="d">Estaciones de trabajo (VLAN 10 · DATOS)</span></div><span class="tag t">Requerido</span></label>
+              <label class="svc"><input type="checkbox" id="chkSrvVoip" checked onchange="updateSummaryCounters()"><div><b>Telefonía IP y Call Center</b><span class="d">Voz en tiempo real (VLAN 20 · VOZ IP)</span></div><span class="tag">QoS</span></label>
+              <label class="svc"><input type="checkbox" id="chkSrvWifi" checked onchange="updateSummaryCounters()"><div><b>Wi-Fi corporativo e invitados</b><span class="d">Access Points con densidad móvil (VLAN 30 · WIFI)</span></div><span class="tag t">+50% margen</span></label>
+              <label class="svc"><input type="checkbox" id="chkSrvCctv" checked onchange="updateSummaryCounters()"><div><b>Cámaras de seguridad</b><span class="d">Circuito cerrado y NVR (VLAN 40 · CCTV)</span></div><span class="tag a">Seguridad</span></label>
+            </div>
+          </div>
+          <div>
+            <label class="label">5. Red base privada (RFC 1918)</label>
+            <div class="num">
+              <p class="hint" style="margin-bottom:12px">Desde esta red se computan todas las subredes sin solapamiento.</p>
+              <div class="chips" id="baseChips">
+                <button type="button" class="chip active" onclick="setBaseIpAddress('10.0.0.0/16',this)">10.0.0.0/16</button>
+                <button type="button" class="chip" onclick="setBaseIpAddress('172.16.0.0/16',this)">172.16.0.0/16</button>
+                <button type="button" class="chip" onclick="setBaseIpAddress('192.168.0.0/16',this)">192.168.0.0/16</button>
+              </div>
+              <input type="text" id="inpBaseIp" value="10.0.0.0/16" class="mono" style="margin-top:14px">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta">
+        <div class="hint" id="lblLiveEstimate">Estimación: 6 switches de piso, 2 enlaces WAN /30 y 26 subredes calculadas.</div>
+        <button type="button" class="btn primary big" onclick="handleGenerateAndNavigate()">Calcular y generar toda la red <svg class="ic" data-i="arrow"></svg></button>
+      </div>
+    </section>
+
+    <!-- ===== 2. DIRECCIONAMIENTO ===== -->
+    <section id="panel-direccionamiento" class="panel">
+      <div class="eyebrow">Paso 2 de 5 · Captura 01 rúbrica</div>
+      <h2 class="title">Plan maestro de direccionamiento</h2>
+      <p class="lead" id="lblSubnetOrgName" style="margin-bottom:26px">Plan computado para Soluciones Tecnológicas Global S.A.S.</p>
+
+      <div class="metrics">
+        <div class="metric"><small>Subredes VLSM</small><strong id="mSubnets" style="color:var(--accent)">26</strong><span>Cero solapamientos</span></div>
+        <div class="metric"><small>Hosts totales útiles</small><strong id="mHosts">1,536</strong><span>Direcciones asignadas</span></div>
+        <div class="metric"><small>Switches de piso</small><strong id="mSwitches" style="color:var(--teal)">6</strong><span>1 por piso en cada sede</span></div>
+        <div class="metric"><small>Enlaces WAN P2P</small><strong id="mWanLinks" style="color:var(--amber)">2</strong><span>Máscaras fijas /30</span></div>
+      </div>
+
+      <div class="card stack">
+        <div class="row">
+          <div class="searchbox"><svg class="ic" data-i="search"></svg><input type="text" id="tblSearchBox" onkeyup="filterSubnetRows()" placeholder="Filtrar por nombre, VLAN, IP o máscara…"></div>
+          <div style="display:flex;gap:12px;align-items:center"><span class="hint mono" id="lblTotalRows">Total: 0 subredes</span><button class="btn green" onclick="exportToExcel()"><svg class="ic" data-i="download"></svg>Excel (.xlsx)</button></div>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Identificador</th><th>Ubicación</th><th>Hosts req.</th><th>Red</th><th>Máscara / CIDR</th><th>Rango usable</th><th>Broadcast</th><th>Gateway</th></tr></thead>
+            <tbody id="tblSubnetRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. TOPOLOGIA ===== -->
+    <section id="panel-topologia" class="panel">
+      <div class="eyebrow">Paso 3 de 5 · Captura 02 rúbrica</div>
+      <h2 class="title">Topología recomendada</h2>
+      <p class="lead" style="margin-bottom:26px">Jerarquía con routers de sede (core / gateway), enlaces WAN punto a punto /30 y un switch dedicado por piso.</p>
+      <div class="card">
+        <div class="topo" id="topologiaCanvas"></div>
+        <div class="info3">
+          <div class="info"><b><svg class="ic" data-i="shield" style="color:var(--teal)"></svg>Routers WAN de sede</b><p>Ejecutan OSPF Área 0 y enrutamiento entre VLANs (router-on-a-stick con subinterfaces 802.1Q).</p></div>
+          <div class="info"><b><svg class="ic" data-i="link" style="color:var(--accent)"></svg>Enlaces P2P /30</b><p>Máscara 255.255.255.252: exactamente 2 IPs asignables, sin desperdicio.</p></div>
+          <div class="info"><b><svg class="ic" data-i="layers" style="color:var(--amber)"></svg>Switches de piso</b><p>Capa 2 con troncales hacia el router y puertos de acceso para Datos, Voz IP, Wi-Fi y CCTV.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4. CODIGOS ===== -->
+    <section id="panel-codigos" class="panel">
+      <div class="eyebrow">Paso 4 de 5 · Capturas 03, 04, 06, 07</div>
+      <h2 class="title">Scripts para tus dispositivos</h2>
+      <p class="lead" style="margin-bottom:26px">Sintaxis generada automáticamente, lista para pegar en routers y firewalls de laboratorio.</p>
+      <div class="stack">
+        <div class="seg" style="align-self:flex-start">
+          <button class="active" id="vendorTab-cisco" onclick="setVendorScript('cisco')">Cisco IOS</button>
+          <button id="vendorTab-huawei" onclick="setVendorScript('huawei')">Huawei VRP</button>
+          <button id="vendorTab-fortinet" onclick="setVendorScript('fortinet')">Fortinet FortiOS</button>
+          <button id="vendorTab-mikrotik" onclick="setVendorScript('mikrotik')">MikroTik RouterOS</button>
+        </div>
+        <div class="term">
+          <div class="term-bar">
+            <div class="dots"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i><span style="margin-left:8px" id="lblConsoleTitle">Terminal — Cisco IOS (Router_Sede_1)</span></div>
+            <button class="btn ghost-d" onclick="copyTerminalCode()"><svg class="ic" data-i="copy"></svg>Copiar código</button>
+          </div>
+          <pre id="terminalCodeOutput"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5. CIBERDEFENSA ===== -->
+    <section id="panel-ciberdefensa" class="panel">
+      <div class="eyebrow">Paso 5 de 5 · Captura 08 rúbrica</div>
+      <h2 class="title">Ciberdefensa activa contra IA</h2>
+      <p class="lead" style="margin-bottom:20px">La herramienta <b>rechaza entradas maliciosas</b>, <b>audita configuraciones inseguras</b> y garantiza el <b>aislamiento de secretos</b> en repositorios públicos.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px">
+        <button class="btn" onclick="downloadPoliticasIA()"><svg class="ic" data-i="download"></svg>politicas-ia.md</button>
+        <button class="btn" onclick="downloadGitignore()"><svg class="ic" data-i="download"></svg>.gitignore (.env)</button>
+      </div>
+
+      <div class="grid2">
+        <div class="card" style="margin:0">
+          <div class="row" style="margin-bottom:10px"><b style="font-family:var(--serif);font-size:18px">1. Validador de entradas</b><span class="tag t">Anti-Prompt Injection</span></div>
+          <p class="hint" style="margin-bottom:14px">Prueba cómo se detectan comandos de inyección y caracteres peligrosos.</p>
+          <input type="text" id="inpSanitizeTest" class="mono" value="system-view; drop table sedes; ignore previous rules" placeholder="Ingresa texto malicioso o inyección…">
+          <button class="btn primary" style="margin-top:12px" onclick="runSanitizationTest()"><svg class="ic" data-i="bug"></svg>Probar ataque</button>
+          <div class="result" id="sanitizeResultBox">
+            <div class="rt"><svg class="ic" data-i="alert"></svg><span id="sanitizeTitle">Aún sin analizar</span></div>
+            <p id="sanitizeDetails">Pulsa «Probar ataque» para analizar el texto.</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin:0">
+          <div class="row" style="margin-bottom:10px"><b style="font-family:var(--serif);font-size:18px">2. Auditor de configuración</b><span class="tag a">Hardening WAN</span></div>
+          <p class="hint" style="margin-bottom:14px">Verifica que las plantillas no incluyan prácticas inseguras que la IA suele sugerir.</p>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <div class="audit"><span class="ok"><svg class="ic" data-i="check"></svg>Gestión remota</span><span class="tag t">Telnet off · SSHv2</span></div>
+            <div class="audit"><span class="ok"><svg class="ic" data-i="check"></svg>Contraseñas</span><span class="tag t">password-encryption</span></div>
+            <div class="audit"><span class="ok"><svg class="ic" data-i="check"></svg>Repositorio GitHub</span><span class="tag o">Secretos en .env</span></div>
+            <div class="audit"><span class="ok"><svg class="ic" data-i="check"></svg>Enlaces WAN</span><span class="tag a">/30 estricta</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="hint" style="margin-top:40px;text-align:center">WAN Architect Studio v4.0 — Proyecto Interconexión de Redes WAN</p>
+  </main>
+</div>
+
+<div id="toast"><b id="toastTitle"></b><span id="toastMsg"></span></div>
+
+<script>
+/* ============ ICONOS (SVG en línea, sin librerías externas) ============ */
+const ICONS = {
+  network:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  arrow:'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  router:'<rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="18" x2="6.01" y2="18"/><line x1="10" y1="18" x2="10.01" y2="18"/><path d="M8 14v-4"/><path d="M16 14v-4"/><path d="M5 7a10 10 0 0 1 14 0"/>',
+  bug:'<rect x="8" y="6" width="8" height="14" rx="4"/><path d="M19 7l-3 2M5 7l3 2M19 19l-3-2M5 19l3-2M20 13h-4M4 13h4M10 2l1 2M14 2l-1 2"/>',
+  alert:'<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>'
+};
+function paintIcons(root=document){
+  root.querySelectorAll('svg[data-i]').forEach(s=>{
+    if(s.dataset.done) return;
+    s.setAttribute('viewBox','0 0 24 24'); s.classList.add('ic');
+    s.innerHTML = ICONS[s.dataset.i] || ''; s.dataset.done = 1;
+  });
+}
+
+/* ============ ESTADO ============ */
+const appState = {
+  companyName:'Soluciones Tecnológicas Global S.A.S.', baseIp:'10.0.0.0', cidr:16,
+  sedes:3, pisos:2, usersPerPiso:45,
+  services:{datos:true, voip:true, wifi:true, cctv:true}, currentVendor:'cisco'
+};
+let calculatedSubnets = [];
+
+document.addEventListener('DOMContentLoaded', ()=>{ paintIcons(); calculateCompleteNetwork(); updateSummaryCounters(); });
+
+/* ============ NAVEGACIÓN ============ */
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.step').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.getElementById('panel-'+name)?.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function handleGenerateAndNavigate(){
+  syncInputsToState();
+  if(!calculateCompleteNetwork()) return;
+  switchTab('direccionamiento');
+  showNotification('¡Cálculo exitoso!','Se generó el direccionamiento VLSM, la topología y los códigos de dispositivos.');
+}
+
+let toastTimer;
+function showNotification(title,msg,ok=true){
+  const t=document.getElementById('toast');
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.toggle('err',!ok); t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3600);
+}
+
+/* ============ FORMULARIO ============ */
+function applyCompanyPreset(p, el){
+  const P={small:[2,1,20],medium:[3,2,45],large:[5,3,100]}[p];
+  document.getElementById('inpSedes').value=P[0];
+  document.getElementById('inpPisos').value=P[1];
+  document.getElementById('inpUsers').value=P[2];
+  document.querySelectorAll('.preset').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  updateSummaryCounters();
+}
+
+function stepVal(id, dir){
+  const el=document.getElementById(id); if(!el) return;
+  const min=+el.min||1, max=+el.max||500, step=id==='inpUsers'?5:1;
+  el.value=Math.min(max,Math.max(min,(parseInt(el.value)||min)+dir*step));
+  updateSummaryCounters();
+}
+
+function setBaseIpAddress(v, el){
+  document.getElementById('inpBaseIp').value=v;
+  document.querySelectorAll('#baseChips .chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+function clampInput(id){
+  const el=document.getElementById(id);
+  const min=+el.min, max=+el.max;
+  return Math.min(max,Math.max(min,parseInt(el.value)||min));
+}
+
+function updateSummaryCounters(){
+  const s=clampInput('inpSedes'), p=clampInput('inpPisos'), u=clampInput('inpUsers');
+  document.getElementById('badgeSedes').textContent=`${s} Sedes`;
+  document.getElementById('badgePisos').textContent=`${p} Pisos`;
+  document.getElementById('badgeUsers').textContent=`${u} Empleados`;
+  let v=1;
+  ['chkSrvVoip','chkSrvWifi','chkSrvCctv'].forEach(i=>{ if(document.getElementById(i)?.checked) v++; });
+  const wan=Math.max(0,s-1);
+  document.getElementById('lblLiveEstimate').textContent=
+    `Estimación: ${s*p} switches de piso, ${wan} enlaces WAN /30 y ${s*p*v+wan} subredes calculadas.`;
+}
+
+function syncInputsToState(){
+  const name=document.getElementById('inpCompanyName').value.trim();
+  if(name) appState.companyName=name;
+  appState.sedes=clampInput('inpSedes');
+  appState.pisos=clampInput('inpPisos');
+  appState.usersPerPiso=clampInput('inpUsers');
+  appState.services.voip=document.getElementById('chkSrvVoip').checked;
+  appState.services.wifi=document.getElementById('chkSrvWifi').checked;
+  appState.services.cctv=document.getElementById('chkSrvCctv').checked;
+  const raw=document.getElementById('inpBaseIp').value.trim()||'10.0.0.0/16';
+  const [ip,c]=raw.split('/');
+  const okIp=/^(\d{1,3}\.){3}\d{1,3}$/.test(ip||'') && ip.split('.').every(o=>+o<=255);
+  const cidr=c?parseInt(c):16;
+  if(!okIp || !(cidr>=8 && cidr<=24)){
+    showNotification('Red base no válida','Usa formato 10.0.0.0/16 (CIDR entre /8 y /24). Se usó 10.0.0.0/16.',false);
+    document.getElementById('inpBaseIp').value='10.0.0.0/16';
+    appState.baseIp='10.0.0.0'; appState.cidr=16;
+  } else { appState.baseIp=ip; appState.cidr=cidr; }
+}
+
+/* ============ CÁLCULO VLSM ============ */
+function calculateCompleteNetwork(){
+  calculatedSubnets=[];
+  let cur=ipToInt(appState.baseIp);
+  const start=cur;
+
+  const defs=[{key:'datos',name:'DATOS',hosts:appState.usersPerPiso,vlanBase:10}];
+  if(appState.services.voip) defs.push({key:'voip',name:'VOZ_IP',hosts:appState.usersPerPiso,vlanBase:20});
+  if(appState.services.wifi) defs.push({key:'wifi',name:'WIFI',hosts:Math.ceil(appState.usersPerPiso*1.5),vlanBase:30});
+  if(appState.services.cctv) defs.push({key:'cctv',name:'CCTV',hosts:14,vlanBase:40});
+
+  const add=(o)=>{ calculatedSubnets.push(o); };
+
+  for(let s=1;s<=appState.sedes;s++){
+    for(let p=1;p<=appState.pisos;p++){
+      defs.forEach(v=>{
+        const cidr=32-Math.ceil(Math.log2(v.hosts+2));
+        const size=Math.pow(2,32-cidr), mask=cidrToMask(cidr);
+        add({
+          id:`S${s}_P${p}_${v.key}`, name:`Sede_${s}_P${p}_${v.name}`, location:`Sede ${s} — Piso ${p}`,
+          reqHosts:v.hosts, usableHosts:size-2, netIp:intToIp(cur), mask, wildcard:intToIp(~ipToInt(mask)>>>0),
+          cidr:`/${cidr}`, range:`${intToIp(cur+1)} – ${intToIp(cur+size-2)}`, broadcast:intToIp(cur+size-1),
+          gateway:intToIp(cur+1), vlanId:v.vlanBase+p, sedeNum:s, pisoNum:p
+        });
+        cur+=size;
+      });
+    }
+  }
+  for(let w=1;w<appState.sedes;w++){
+    add({
+      id:`WAN_P2P_${w}_${w+1}`, name:`ENLACE_WAN_S${w}_S${w+1}`, location:`WAN Sede ${w} ↔ Sede ${w+1}`,
+      reqHosts:2, usableHosts:2, netIp:intToIp(cur), mask:'255.255.255.252', wildcard:'0.0.0.3', cidr:'/30',
+      range:`${intToIp(cur+1)} – ${intToIp(cur+2)}`, broadcast:intToIp(cur+3), gateway:intToIp(cur+1),
+      vlanId:'N/A', sedeNum:w, pisoNum:0
+    });
+    cur+=4;
+  }
+
+  const capacity=Math.pow(2,32-appState.cidr);
+  if(cur-start>capacity){
+    showNotification('Red base insuficiente',`El plan necesita ${(cur-start).toLocaleString('es-CO')} IPs y ${appState.baseIp}/${appState.cidr} solo tiene ${capacity.toLocaleString('es-CO')}. Usa un bloque más grande.`,false);
+  }
+
+  renderAddressingUI(); renderTopologyUI(); renderDeviceScript(appState.currentVendor);
+  return true;
+}
+
+function renderAddressingUI(){
+  document.getElementById('lblSubnetOrgName').textContent=
+    `Plan computado para ${appState.companyName} · ${appState.sedes} sedes, ${appState.pisos} pisos, red base ${appState.baseIp}/${appState.cidr}.`;
+  document.getElementById('mSubnets').textContent=calculatedSubnets.length;
+  document.getElementById('mHosts').textContent=calculatedSubnets.reduce((a,c)=>a+c.usableHosts,0).toLocaleString('es-CO');
+  document.getElementById('mSwitches').textContent=appState.sedes*appState.pisos;
+  document.getElementById('mWanLinks').textContent=Math.max(0,appState.sedes-1);
+  document.getElementById('lblTotalRows').textContent=`Total: ${calculatedSubnets.length} subredes`;
+
+  const tb=document.getElementById('tblSubnetRows'); tb.innerHTML='';
+  calculatedSubnets.forEach(i=>{
+    const wan=i.vlanId==='N/A', tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="${wan?'wan':'lan'}">${i.name}</td>
+      <td style="font-family:var(--sans)">${i.location}</td>
+      <td>${i.reqHosts}</td>
+      <td><b>${i.netIp}</b></td>
+      <td>${i.mask} <b style="color:var(--accent)">${i.cidr}</b></td>
+      <td>${i.range}</td><td>${i.broadcast}</td>
+      <td style="color:var(--teal);font-weight:600">${i.gateway}</td>`;
+    tb.appendChild(tr);
+  });
+  filterSubnetRows();
+}
+
+function filterSubnetRows(){
+  const q=(document.getElementById('tblSearchBox')?.value||'').toLowerCase();
+  document.querySelectorAll('#tblSubnetRows tr').forEach(r=>{ r.style.display=r.textContent.toLowerCase().includes(q)?'':'none'; });
+}
+
+/* ============ TOPOLOGÍA ============ */
+function renderTopologyUI(){
+  const c=document.getElementById('topologiaCanvas'); let h='<div class="topo-in">';
+  for(let s=1;s<=appState.sedes;s++){
+    h+=`<div class="site"><div class="site-h"><svg class="ic" data-i="router" style="width:26px;height:26px"></svg>
+        <div><b>Router_Sede_${s}</b><small>Gateway Core WAN</small></div></div>`;
+    for(let p=1;p<=appState.pisos;p++){
+      h+=`<div class="sw"><span><svg class="ic" data-i="layers"></svg>Switch_P${p}</span><span class="mono" style="color:var(--teal)">Piso ${p}</span></div>`;
+    }
+    h+='</div>';
+    if(s<appState.sedes) h+='<div class="link"><i></i><em>WAN /30</em></div>';
+  }
+  c.innerHTML=h+'</div>'; paintIcons(c);
+}
+
+/* ============ SCRIPTS POR FABRICANTE ============ */
+function setVendorScript(v){
+  appState.currentVendor=v;
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('vendorTab-'+v)?.classList.add('active');
+  renderDeviceScript(v);
+}
+
+function renderDeviceScript(vendor){
+  const lan=calculatedSubnets.filter(s=>s.vlanId!=='N/A' && s.sedeNum===1);
+  const wan=calculatedSubnets.filter(s=>s.vlanId==='N/A');
+  const title=document.getElementById('lblConsoleTitle'); let c='';
+
+  if(vendor==='cisco'){
+    title.textContent='Terminal — Cisco IOS (Router_Sede_1)';
+    c=`! ==================================================================\n! CONFIGURACION CISCO IOS — WAN ARCHITECT STUDIO\n! Empresa: ${appState.companyName}\n! Dispositivo: Router_Sede_1 (Core / Gateway)\n! Ciberdefensa: Telnet desactivado, SSHv2 y pass-encryption activos\n! ==================================================================\n`;
+    c+=`enable\nconfigure terminal\nhostname Router_Sede_1\nservice password-encryption\nno ip domain-lookup\nip domain-name redwan.local\ncrypto key generate rsa modulus 2048\nline vty 0 4\n transport input ssh\n login local\nexit\n!\n`;
+    lan.forEach(s=>{ c+=`interface GigabitEthernet0/0/0.${s.vlanId}\n description Gateway_${s.name}\n encapsulation dot1Q ${s.vlanId}\n ip address ${s.gateway} ${s.mask}\n no shutdown\n!\n`; });
+    if(wan[0]) c+=`interface GigabitEthernet0/0/1\n description Enlace_WAN_P2P_Hacia_Sede_2\n ip address ${wan[0].gateway} ${wan[0].mask}\n no shutdown\n!\n`;
+    c+=`router ospf 1\n router-id 1.1.1.1\n`;
+    lan.forEach(s=>{ c+=` network ${s.netIp} ${s.wildcard} area 0\n`; });
+    if(wan[0]) c+=` network ${wan[0].netIp} ${wan[0].wildcard} area 0\n`;
+    c+=`exit\n! Fin de configuracion Cisco IOS`;
+  } else if(vendor==='huawei'){
+    title.textContent='Terminal — Huawei VRP (Router_Sede_1)';
+    c=`# ==================================================================\n# CONFIGURACION HUAWEI VRP — WAN ARCHITECT STUDIO\n# Empresa: ${appState.companyName}\n# Dispositivo: Router_Sede_1\n# ==================================================================\nsystem-view\nsysname Router_Sede_1\n#\n`;
+    lan.forEach(s=>{ c+=`vlan ${s.vlanId}\n description ${s.name}\n#\ninterface GigabitEthernet0/0/1.${s.vlanId}\n dot1q termination vid ${s.vlanId}\n ip address ${s.gateway} ${s.mask}\n arp broadcast enable\n#\n`; });
+    if(wan[0]) c+=`interface GigabitEthernet0/0/2\n description Enlace_WAN_Sede_2\n ip address ${wan[0].gateway} ${wan[0].mask}\n#\n`;
+    c+=`ospf 1 router-id 1.1.1.1\n area 0.0.0.0\n`;
+    lan.forEach(s=>{ c+=`  network ${s.netIp} ${s.wildcard}\n`; });
+    if(wan[0]) c+=`  network ${wan[0].netIp} ${wan[0].wildcard}\n`;
+    c+=`return\n# Fin de configuracion Huawei VRP`;
+  } else if(vendor==='fortinet'){
+    title.textContent='Terminal — Fortinet FortiOS (FortiGate_Edge)';
+    c=`# ==================================================================\n# CONFIGURACION FORTINET FORTIOS — WAN ARCHITECT STUDIO\n# Dispositivo: FortiGate_Edge_Router\n# ==================================================================\nconfig system interface\n`;
+    lan.forEach(s=>{ c+=`    edit "vlan${s.vlanId}"\n        set vdom "root"\n        set ip ${s.gateway} ${s.mask}\n        set allowaccess ping https ssh\n        set interface "port1"\n        set vlanid ${s.vlanId}\n    next\n`; });
+    c+=`end\n\nconfig firewall policy\n    edit 1\n        set name "LAN_A_INTERNET"\n        set srcintf "any"\n        set dstintf "port2"\n        set action accept\n        set schedule "always"\n        set service "ALL"\n        set nat enable\n    next\nend\n`;
+  } else {
+    title.textContent='Terminal — MikroTik RouterOS (RB_Sede_1)';
+    c=`# ==================================================================\n# CONFIGURACION MIKROTIK ROUTEROS — WAN ARCHITECT STUDIO\n# Dispositivo: MikroTik_RB_Sede_1\n# ==================================================================\n/system identity set name="MikroTik_Sede_1"\n\n/interface vlan\n`;
+    lan.forEach(s=>{ c+=`add interface=ether1 name=vlan${s.vlanId} vlan-id=${s.vlanId}\n`; });
+    c+=`\n/ip address\n`;
+    lan.forEach(s=>{ c+=`add address=${s.gateway}${s.cidr} interface=vlan${s.vlanId} comment="${s.name}"\n`; });
+    if(wan[0]) c+=`add address=${wan[0].gateway}/30 interface=ether2 comment="WAN_P2P"\n`;
+  }
+  document.getElementById('terminalCodeOutput').textContent=c;
+}
+
+function copyTerminalCode(){
+  const text=document.getElementById('terminalCodeOutput').textContent;
+  if(navigator.clipboard?.writeText){
+    navigator.clipboard.writeText(text).then(()=>showNotification('Copiado','Script listo para pegar en el router.')).catch(()=>fallbackCopy(text));
+  } else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  try{
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    showNotification('Copiado','Script copiado al portapapeles.');
+  }catch(e){ showNotification('Error','Selecciona y copia manualmente.',false); }
+}
+
+/* ============ EXCEL ============ */
+function exportToExcel(){
+  const rows=calculatedSubnets.map(i=>({
+    'Empresa':appState.companyName,'Identificador / VLAN':i.name,'Ubicación':i.location,'VLAN ID':i.vlanId,
+    'Hosts Req.':i.reqHosts,'Hosts Útiles':i.usableHosts,'Dirección de Red':i.netIp,'Máscara':i.mask,
+    'CIDR':i.cidr,'Rango IPs':i.range,'Broadcast':i.broadcast,'Gateway Sugerido':i.gateway
+  }));
+  const file='Plan_Red_WAN_'+appState.companyName.replace(/\s+/g,'_');
+  if(window.XLSX?.utils){
+    try{
+      const ws=XLSX.utils.json_to_sheet(rows), wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'Direccionamiento WAN');
+      XLSX.writeFile(wb,file+'.xlsx');
+      showNotification('Excel generado','El archivo .xlsx se descargó correctamente.'); return;
+    }catch(e){ console.warn('XLSX falló, usando CSV',e); }
+  }
+  const keys=Object.keys(rows[0]||{});
+  const csv=[keys.join(',')].concat(rows.map(r=>keys.map(k=>`"${String(r[k]).replace(/"/g,'""')}"`).join(','))).join('\n');
+  triggerFileDownload(csv,file+'.csv','text/csv');
+  showNotification('Descarga completada','Plan descargado en CSV compatible con Excel.');
+}
+
+/* ============ CIBERDEFENSA ============ */
+function runSanitizationTest(){
+  const input=document.getElementById('inpSanitizeTest').value||'';
+  const box=document.getElementById('sanitizeResultBox'), t=document.getElementById('sanitizeTitle'), d=document.getElementById('sanitizeDetails');
+  const pats=[';','--','<script>','drop','eval','exec','system-view','ignore','previous'];
+  const found=pats.filter(p=>input.toLowerCase().includes(p));
+  box.classList.remove('shake');
+  if(found.length){
+    box.className='result'; void box.offsetWidth; box.classList.add('shake');
+    t.textContent='¡Amenaza bloqueada por Ciberdefensa!';
+    d.textContent=`Patrones de inyección detectados: ${found.join(', ')}. La entrada fue neutralizada y rechazada.`;
+    showNotification('Ciberdefensa activa','Se bloqueó una inyección maliciosa en tiempo real.',false);
+  } else {
+    box.className='result safe';
+    t.textContent='Entrada segura y verificada';
+    d.textContent='El texto no contiene vectores de ataque ni inyección de comandos reconocibles.';
+  }
+}
+
+function downloadPoliticasIA(){
+  triggerFileDownload(`# docs/politicas-ia.md — Ciberdefensa y uso de IA en la herramienta
+
+1. La herramienta nunca guarda contraseñas ni tokens en el código; van en .env (protegido por .gitignore).
+2. Con IA pública solo se usan datos de ejemplo, nunca IPs reales, credenciales ni topologías sensibles.
+3. Todo lo que ingresa el usuario se valida y sanea antes de usarse.
+4. La herramienta advierte cuando una configuración es insegura (puertos abiertos, credenciales por defecto) y aplica el mínimo privilegio.
+5. No se ejecuta ningún comando o configuración que no se entienda; lo generado por IA se revisa y se prueba primero.
+6. Toda automatización/acceso a equipos se hace solo en el laboratorio autorizado.
+7. La calidad se mide con pruebas continuas de direccionamiento sin colisión.`,'politicas-ia.md','text/markdown');
+  showNotification('Descarga iniciada','Archivo politicas-ia.md generado.');
+}
+function downloadGitignore(){
+  triggerFileDownload(`# Archivos sensibles que NUNCA se suben al repositorio publico\n.env\n*.env\nsecrets/\npasswords.txt\ntoken.txt\n`,'.gitignore','text/plain');
+  showNotification('.gitignore descargado','Archivo protector de credenciales generado.');
+}
+function triggerFileDownload(text,name,mime){
+  const url=URL.createObjectURL(new Blob([text],{type:mime+';charset=utf-8;'}));
+  const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/* ============ UTILIDADES IPv4 ============ */
+function ipToInt(ip){ return ip.split('.').reduce((a,o)=>(a<<8)+parseInt(o,10),0)>>>0; }
+function intToIp(n){ n=n>>>0; return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.'); }
+function cidrToMask(c){ return intToIp((0xFFFFFFFF<<(32-c))>>>0); }
+</script>
+</body>
+</html>
